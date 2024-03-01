@@ -46,9 +46,11 @@ def get_max_steps(train_path: str, num_train_epochs: int, batch_size: int) -> in
 def main():
   num_labels = 2
   num_train_epochs = 10
-  batch_size = 32
+  batch_size = 16
 
-  model_name = "distilbert/distilbert-base-uncased"
+  # model_name = "distilbert/distilbert-base-uncased"
+  model_name = "google-bert/bert-base-uncased"
+
   run_name = "debugging"
 
   id2label = {0: "False", 1: "True"}
