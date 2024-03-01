@@ -46,7 +46,7 @@ def main():
   num_labels = 2
   num_train_epochs = 50
   # batch_size = 16
-  batch_size = 32
+  batch_size = 16
 
   # model_name = "distilbert/distilbert-base-uncased"
   model_name = "google-bert/bert-base-uncased"
