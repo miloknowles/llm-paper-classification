@@ -3,10 +3,9 @@ import logging
 
 import torch
 
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers import TrainingArguments, Trainer
 
-from datasets import load_dataset, DatasetDict
 from classifier.arxiv_dataset import load_dataset_splits
 from classifier.paths import data_folder, models_folder
 
@@ -45,8 +44,9 @@ def get_max_steps(train_path: str, num_train_epochs: int, batch_size: int) -> in
 
 def main():
   num_labels = 2
-  num_train_epochs = 10
-  batch_size = 16
+  num_train_epochs = 50
+  # batch_size = 16
+  batch_size = 32
 
   # model_name = "distilbert/distilbert-base-uncased"
   model_name = "google-bert/bert-base-uncased"
@@ -89,6 +89,7 @@ def main():
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     save_strategy="epoch",
+    learning_rate=1e-4,
     max_steps=get_max_steps(data_folder / "finetuning" / "train.jsonl", num_train_epochs, batch_size),
   )
 
