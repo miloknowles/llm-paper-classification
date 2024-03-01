@@ -49,7 +49,7 @@ def main():
   batch_size = 16
 
   # model_name = "distilbert/distilbert-base-uncased"
-  model_name = "google-bert/bert-base-uncased"
+  model_name = "bert-base-uncased"
 
   run_name = "debugging"
 
