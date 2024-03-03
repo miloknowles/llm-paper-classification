@@ -59,7 +59,6 @@ def save_pretraining_tokenized_dataset():
 
   def tokenize(element):
     """Tokenize the `text` field of this example into chunks of `context_length` tokens.
-
     
     Notes
     -----
@@ -80,7 +79,8 @@ def save_pretraining_tokenized_dataset():
       return_length=True,
     )
 
-    # Chunks that don't reach the `context_length` are discarded.
+    # Chunks that don't reach the `context_length` are discarded. Very important
+    # to include padding above so that this code doesn't throw away shorter examples!
     input_batch = []
     for length, input_ids in zip(outputs["length"], outputs["input_ids"]):
       if length == args.context_length:
@@ -91,7 +91,6 @@ def save_pretraining_tokenized_dataset():
   tokenized_datasets = raw_datasets.map(
     tokenize,
     batched=True,
-    batch_size=8, # 
     remove_columns=raw_datasets["train"].column_names,
     num_proc=args.num_proc
   )
