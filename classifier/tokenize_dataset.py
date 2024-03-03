@@ -4,7 +4,7 @@ import argparse
 from transformers import AutoTokenizer
 from datasets import load_dataset, DatasetDict
 
-from classifier.paths import data_folder, models_folder
+from classifier.paths import data_folder
 
 
 def load_pretraining_text_dataset(num_proc: int = 4) -> DatasetDict:

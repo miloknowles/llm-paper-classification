@@ -47,6 +47,7 @@ def preprocess_logits_for_metrics(logits, labels):
 def main():
   """Pretrain a masked language model on the arXiv dataset."""
   parser = argparse.ArgumentParser()
+  parser.add_argument("--data_folder", type=str, help="The folder where the pretraining data is stored.")
   parser.add_argument("--run_name", type=str, default="pretrain_debug", help="The name of the run.")
   parser.add_argument("--model_name", type=str, default="distilbert/distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
   parser.add_argument("--tokenizer_path", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use (if remote), otherwise a path to a local saved tokenizer.")
