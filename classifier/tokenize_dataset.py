@@ -58,31 +58,47 @@ def save_pretraining_tokenized_dataset():
   print("LOADED")
 
   def tokenize(element):
-    """Tokenize the `text` field of this example into chunks of `context_length` tokens."""
+    """Tokenize the `text` field of this example into chunks of `context_length` tokens.
+
+    
+    Notes
+    -----
+    It's very important that we both truncate and pad the input below. There are
+    many arXiv papers that are shorter than the `context_length`, and we want to
+    include them. There are also some papers that are longer, and we want to
+    truncate those and include their pieces as well.
+
+    The `element["text"]` field is a `list[str]` with a batch size of `1000` by
+    default.
+    """
     outputs = tokenizer(
       element["text"],
       truncation=True,
+      padding="max_length",
       max_length=args.context_length,
       return_overflowing_tokens=True,
       return_length=True,
     )
+
     # Chunks that don't reach the `context_length` are discarded.
     input_batch = []
     for length, input_ids in zip(outputs["length"], outputs["input_ids"]):
       if length == args.context_length:
         input_batch.append(input_ids)
+
     return {"input_ids": input_batch}
 
   tokenized_datasets = raw_datasets.map(
     tokenize,
     batched=True,
+    batch_size=8, # 
     remove_columns=raw_datasets["train"].column_names,
     num_proc=args.num_proc
   )
   print("TOKENIZED")
 
   print(tokenized_datasets)
-  tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized" / args.dataset_name)
+  # tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized" / args.dataset_name)
   print("DONE")
 
 

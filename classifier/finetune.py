@@ -31,8 +31,8 @@ def compute_metrics(pred_eval: tuple[torch.Tensor, torch.Tensor]) -> dict[str, f
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("--run_name", type=str, default="finetune_debug", help="The name of the run.")
-  parser.add_argument("--model_name", type=str, default="distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
-  parser.add_argument("--tokenizer_name", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use. This should exist in the `models/tokenizers` folder.")
+  parser.add_argument("--model_name_or_path", type=str, default="distilbert-base-uncased", help="The name of the model to use (if downloading from Hugging Face). Otherwise, a path to a locally trained model.")
+  parser.add_argument("--tokenizer_name", type=str, default="distilbert-base-uncased-arxiv-32k", help="The name of the tokenizer to use. This should exist in the `models/tokenizers` folder.")
   parser.add_argument("--epochs", type=int, default=50, help="The number of epochs to train for.")
   parser.add_argument("--batch_size", type=int, default=16, help="The batch size to use.")
   parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context.")
