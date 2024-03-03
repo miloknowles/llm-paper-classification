@@ -1,4 +1,5 @@
 import sys; sys.path.append("..")
+import argparse
 
 import torch
 
@@ -11,10 +12,9 @@ from transformers import (
 )
 from transformers import TrainingArguments, Trainer
 from datasets import load_from_disk
+import evaluate
 
 from classifier.paths import data_folder, models_folder
-
-import evaluate
 
 
 metrics = dict(
@@ -43,25 +43,29 @@ def preprocess_logits_for_metrics(logits, labels):
   return logits.argmax(dim=-1)
 
 
-def main(fast_mode: bool = False):
+
+def main():
   """Pretrain a masked language model on the arXiv dataset."""
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--run_name", type=str, default="pretrain_debug", help="The name of the run.")
+  parser.add_argument("--model_name", type=str, default="distilbert/distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
+  parser.add_argument("--tokenizer_name", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use. This should exist in the `models/tokenizers` folder.")
+  parser.add_argument("--epochs", type=int, default=50, help="The number of epochs to train for.")
+  parser.add_argument("--batch_size", type=int, default=32, help="The batch size to use.")
+  parser.add_argument("--mlm_probability", type=float, default=0.15, help="The probability of masking tokens.")
+  parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context.")
+  parser.add_argument("--lr", type=float, default=2e-5, help="The learning rate to use.")
+  parser.add_argument("--fast", action="store_true", help="Run the script in fast mode.")
+  args = parser.parse_args()
+
   set_seed(42)
 
-  run_name = "pretrain_debug"
-  model_name = "distilbert-base-uncased"
-  mlm_probability = 0.15 # same as the default used by BERT
-  context_length = 512
-  num_train_epochs = 50
-
-  # NOTE(milo): I'm able to use a batch size of 32 on an L4 GPU, but only 16 locally.
-  batch_size = 32
-  tokenizer_path = models_folder / "tokenizers" / "distilbert-base-uncased-arxiv"
-
-  tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, model_max_length=context_length)
+  tokenizer_path = models_folder / "tokenizers" / args.tokenizer_name
+  tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, model_max_length=args.context_length)
 
   dataset = load_from_disk(str(data_folder / "pretraining" / "tokenized"))
 
-  if fast_mode:
+  if args.fast:
     dataset["train"] = dataset["train"].select(range(10))
     dataset["val"] = dataset["val"].select(range(10))
 
@@ -70,7 +74,7 @@ def main(fast_mode: bool = False):
 
   # https://huggingface.co/docs/transformers/model_doc/distilbert#transformers.DistilBertConfig
   config = AutoConfig.from_pretrained(
-    model_name,
+    args.model_name,
     vocab_size=len(tokenizer),
   )
   model = AutoModelForMaskedLM.from_config(config)
@@ -81,17 +85,17 @@ def main(fast_mode: bool = False):
   data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=True,
-    mlm_probability=mlm_probability,
+    mlm_probability=args.mlm_probability,
   )
 
   training_args = TrainingArguments(
-    output_dir=models_folder / run_name,
+    output_dir=models_folder / args.run_name,
     evaluation_strategy="epoch",
-    num_train_epochs=num_train_epochs,
-    per_device_train_batch_size=batch_size,
-    per_device_eval_batch_size=batch_size,
+    num_train_epochs=args.epochs,
+    per_device_train_batch_size=args.batch_size,
+    per_device_eval_batch_size=args.batch_size,
     save_strategy="epoch",
-    # learning_rate=1e-4,
+    learning_rate=args.lr,
   )
 
   trainer = Trainer(

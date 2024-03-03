@@ -1,5 +1,5 @@
 import sys; sys.path.append("..")
-import logging
+import argparse
 
 import torch
 
@@ -8,13 +8,10 @@ from transformers import TrainingArguments, Trainer
 from datasets import load_dataset
 
 from classifier.paths import data_folder, models_folder
-from classifier.train_utils import get_best_system_device
 
 import numpy as np
 import evaluate
 
-
-logger = logging.getLogger(__name__)
 
 metrics = dict(
   accuracy=evaluate.load("accuracy"),
@@ -32,26 +29,31 @@ def compute_metrics(pred_eval: tuple[torch.Tensor, torch.Tensor]) -> dict[str, f
 
 
 def main():
-  num_labels = 2
-  num_train_epochs = 50
-  batch_size = 16
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--run_name", type=str, default="finetune_debug", help="The name of the run.")
+  parser.add_argument("--model_name", type=str, default="distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
+  parser.add_argument("--tokenizer_name", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use. This should exist in the `models/tokenizers` folder.")
+  parser.add_argument("--epochs", type=int, default=50, help="The number of epochs to train for.")
+  parser.add_argument("--batch_size", type=int, default=16, help="The batch size to use.")
+  parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context.")
+  parser.add_argument("--lr", type=float, default=2e-5, help="The learning rate to use.")
+  parser.add_argument("--fast", action="store_true", help="Run the script in fast mode.")
+  args = parser.parse_args()
 
-  model_name = "distilbert/distilbert-base-uncased"
-  # model_name = "bert-base-uncased"
-  run_name = "debugging"
-  device = get_best_system_device()
+  num_labels = 2
 
   id2label = {0: "False", 1: "True"}
   label2id = {"False": 0, "True": 1}
 
   model = AutoModelForSequenceClassification.from_pretrained(
-    model_name,
+    args.model_name,
     num_labels=num_labels,
     id2label=id2label,
     label2id=label2id,
   )
   # https://stackoverflow.com/questions/69842980/asking-to-truncate-to-max-length-but-no-maximum-length-is-provided-and-the-model
-  tokenizer = AutoTokenizer.from_pretrained(model_name, model_max_length=512)
+  tokenizer = AutoTokenizer.from_pretrained(args.model_name, model_max_length=args.context_length)
+  print("Context window size:", tokenizer.model_max_length)
 
   # This dataset has columns: `text` and `label`.
   dataset = load_dataset("json", data_files={
@@ -69,15 +71,17 @@ def main():
 
   dataset = dataset.map(convert_labels, batched=True)
   dataset = dataset.map(tokenize, batched=True).shuffle(seed=42)
+  print("Dataset:")
+  print(dataset)
 
   training_args = TrainingArguments(
-    output_dir=models_folder / run_name,
+    output_dir=models_folder / args.run_name,
     evaluation_strategy="epoch",
-    num_train_epochs=num_train_epochs,
-    per_device_train_batch_size=batch_size,
-    per_device_eval_batch_size=batch_size,
+    num_train_epochs=args.epochs,
+    per_device_train_batch_size=args.batch_size,
+    per_device_eval_batch_size=args.batch_size,
     save_strategy="epoch",
-    # learning_rate=1e-4,
+    learning_rate=args.lr,
   )
 
   trainer = Trainer(

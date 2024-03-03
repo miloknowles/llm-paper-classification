@@ -1,4 +1,5 @@
 import sys; sys.path.append("..")
+import argparse
 
 from transformers import AutoTokenizer
 from datasets import load_dataset, DatasetDict
@@ -25,11 +26,7 @@ def load_pretraining_text_dataset(num_proc: int = 4) -> DatasetDict:
   return raw
 
 
-def save_pretraining_tokenized_dataset(
-  context_length: int = 512,
-  tokenizer_path: str = models_folder / "tokenizers" / "distilbert-base-uncased-arxiv",
-  num_proc: int = 4
-):
+def save_pretraining_tokenized_dataset():
   """Tokenizes the pretraining dataset and saves it to disk.
   
   This allows us to skip this time-consuming step at training time.
@@ -44,10 +41,16 @@ def save_pretraining_tokenized_dataset(
   The tokenized dataset is saved to `data_folder/pretraining/tokenized`, in
   Arrow format. You can read the data using `datasets.load_from_disk`.
   """
-  tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, max_length=context_length)
-  tokenizer.model_max_length = context_length
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context window. The dataset is chunked into this size.")
+  parser.add_argument("--tokenizer_path", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv", help="The path to the tokenizer to use.")
+  parser.add_argument("--num_proc", type=int, default=4, help="The number of processes to use.")
+  args = parser.parse_args()
 
-  raw_datasets = load_pretraining_text_dataset(num_proc=num_proc)
+  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path, model_max_length=args.context_length)
+  print("Context window size:", tokenizer.model_max_length)
+
+  raw_datasets = load_pretraining_text_dataset(num_proc=args.num_proc)
   print("LOADED")
 
   def tokenize(element):
@@ -55,14 +58,14 @@ def save_pretraining_tokenized_dataset(
     outputs = tokenizer(
       element["text"],
       truncation=True,
-      max_length=context_length,
+      max_length=args.context_length,
       return_overflowing_tokens=True,
       return_length=True,
     )
     # Chunks that don't reach the `context_length` are discarded.
     input_batch = []
     for length, input_ids in zip(outputs["length"], outputs["input_ids"]):
-      if length == context_length:
+      if length == args.context_length:
         input_batch.append(input_ids)
     return {"input_ids": input_batch}
 
@@ -70,17 +73,13 @@ def save_pretraining_tokenized_dataset(
     tokenize,
     batched=True,
     remove_columns=raw_datasets["train"].column_names,
-    num_proc=num_proc
+    num_proc=args.num_proc
   )
 
   print(tokenized_datasets)
-  tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized")
+  tokenized_datasets.save_to_disk(data_folder / "pretraining" / f"tokenized")
   print("DONE")
 
 
 if __name__ == "__main__":
-  save_pretraining_tokenized_dataset(
-    context_length=512,
-    tokenizer_path=models_folder / "tokenizers" / "distilbert-base-uncased-arxiv",
-    num_proc=4
-  )
+  save_pretraining_tokenized_dataset()
