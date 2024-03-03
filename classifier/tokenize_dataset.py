@@ -97,7 +97,7 @@ def save_pretraining_tokenized_dataset():
   print("TOKENIZED")
 
   print(tokenized_datasets)
-  # tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized" / args.dataset_name)
+  tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized" / args.dataset_name)
   print("DONE")
 
 
