@@ -54,7 +54,7 @@ def main(fast_mode: bool = False):
   num_train_epochs = 50
 
   # NOTE(milo): I'm able to use a batch size of 32 on an L4 GPU, but only 16 locally.
-  batch_size = 16
+  batch_size = 32
   tokenizer_path = models_folder / "tokenizers" / "distilbert-base-uncased-arxiv"
 
   tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, model_max_length=context_length)
@@ -68,6 +68,7 @@ def main(fast_mode: bool = False):
   print("Loaded dataset:")
   print(dataset)
 
+  # https://huggingface.co/docs/transformers/model_doc/distilbert#transformers.DistilBertConfig
   config = AutoConfig.from_pretrained(
     model_name,
     vocab_size=len(tokenizer),
