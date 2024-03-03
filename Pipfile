@@ -12,6 +12,7 @@ sentencepiece = "*"
 evaluate = "*"
 scikit-learn = "*"
 tqdm = "*"
+plotly = "*"
 
 [dev-packages]
 jupyter = "*"

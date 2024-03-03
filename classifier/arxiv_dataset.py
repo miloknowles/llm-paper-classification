@@ -36,3 +36,14 @@ def load_dataset_splits(
     "test": create_iterable_dataset(test_path),
   })
 
+
+def get_max_steps(train_path: str, num_train_epochs: int, batch_size: int) -> int:
+  """Get the maximum number of training steps.
+  
+  This is required for the `TrainingArguments` object, since we're using an
+  iterable dataset that is backed by a generator with unknown length.
+  """
+  with open(train_path, 'r') as f:
+    for n_examples, _ in enumerate(f):
+      pass
+  return (n_examples + 1) * num_train_epochs // batch_size

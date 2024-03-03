@@ -31,41 +31,6 @@ def compute_metrics(pred_eval: tuple[torch.Tensor, torch.Tensor]) -> dict[str, f
   return {name: metric.compute(predictions=predictions, references=labels) for name, metric in metrics.items()}
 
 
-def get_max_steps(train_path: str, num_train_epochs: int, batch_size: int) -> int:
-  """Get the maximum number of training steps.
-  
-  This is required for the `TrainingArguments` object, since we're using an
-  iterable dataset that is backed by a generator with unknown length.
-  """
-  with open(train_path, 'r') as f:
-    for n_examples, _ in enumerate(f):
-      pass
-  return (n_examples + 1) * num_train_epochs // batch_size
-
-
-class TrainerWithCustomLoss(Trainer):
-  """Subclasses `Trainer` to use a custom loss function.
-  
-  This allows us to use a weighted cross entropy loss to deal with class imbalance.
-  """
-  def __init__(
-    self,
-    compute_loss_fn: callable,
-    *args,
-    **kwargs
-  ):
-    super().__init__(*args, **kwargs)
-    self.compute_loss_fn = compute_loss_fn
-
-  def compute_loss(self, model, inputs, return_outputs=False):
-    """Compute using the custom loss function."""
-    labels = inputs.pop("labels")
-    outputs = model(**inputs)
-    logits = outputs.logits
-    loss = self.compute_loss_fn(logits, labels)
-    return (loss, outputs) if return_outputs else loss
-
-
 def main():
   num_labels = 2
   num_train_epochs = 50
@@ -78,7 +43,6 @@ def main():
 
   id2label = {0: "False", 1: "True"}
   label2id = {"False": 0, "True": 1}
-  label_loss_weights = torch.Tensor([1.0, 10.0]).to(device)
 
   model = AutoModelForSequenceClassification.from_pretrained(
     model_name,
@@ -114,18 +78,8 @@ def main():
     per_device_eval_batch_size=batch_size,
     save_strategy="epoch",
     # learning_rate=1e-4,
-    # max_steps=get_max_steps(data_folder / "finetuning" / "train.jsonl", num_train_epochs, batch_size),
+    warmup_steps=500,
   )
-
-  # trainer = TrainerWithCustomLoss(
-  #   compute_loss_fn=torch.nn.CrossEntropyLoss(weight=label_loss_weights, reduction="mean"),
-  #   model=model,
-  #   args=training_args,
-  #   train_dataset=dataset["train"],
-  #   eval_dataset=dataset["val"],
-  #   compute_metrics=compute_metrics,
-  #   tokenizer=tokenizer,
-  # )
 
   trainer = Trainer(
     model=model,
