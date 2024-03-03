@@ -78,7 +78,6 @@ def main():
     per_device_eval_batch_size=batch_size,
     save_strategy="epoch",
     # learning_rate=1e-4,
-    warmup_steps=500,
   )
 
   trainer = Trainer(

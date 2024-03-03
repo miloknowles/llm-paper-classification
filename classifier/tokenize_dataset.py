@@ -38,6 +38,11 @@ def save_pretraining_tokenized_dataset(
   -----
   Tokenized text is chunked into batches of `context_length` tokens. This means
   that some examples will be split into multiple batches.
+
+  Output
+  ------
+  The tokenized dataset is saved to `data_folder/pretraining/tokenized`, in
+  Arrow format. You can read the data using `datasets.load_from_disk`.
   """
   tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, max_length=context_length)
   tokenizer.model_max_length = context_length

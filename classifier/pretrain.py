@@ -16,18 +16,18 @@ import evaluate
 
 
 def main():
+  """Pretrain a masked language model on the arXiv dataset."""
   set_seed(42)
 
   run_name = "pretrain_debug"
   model_name = "distilbert-base-uncased"
-  mlm_probability = 0.15
-  context_length = 128
+  mlm_probability = 0.15 # same as the default used by BERT
+  context_length = 512
   num_train_epochs = 1
   batch_size = 16
   tokenizer_path = models_folder / "tokenizers" / "distilbert-base-uncased-arxiv"
 
-  tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, max_length=context_length)
-  tokenizer.model_max_length = context_length
+  tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, model_max_length=context_length)
 
   dataset = load_from_disk(str(data_folder / "pretraining" / "tokenized"))
   print("Loaded dataset:")
@@ -50,9 +50,11 @@ def main():
   metric = evaluate.load("accuracy")
 
   def compute_metrics(eval_preds):
+    """Takes a tuple of logits and labels and returns a dictionary of metrics.
+
+    Note that this function is called *after* the logits have been preprocessed (argmax).
+    """
     preds, labels = eval_preds
-    # preds have the same shape as the labels, after the argmax(-1) has been calculated
-    # by preprocess_logits_for_metrics
     labels = labels.reshape(-1)
     preds = preds.reshape(-1)
     mask = labels != -100
@@ -87,8 +89,7 @@ def main():
     preprocess_logits_for_metrics=preprocess_logits_for_metrics
   )
 
-  trainer.train()
-
+  # trainer.train()
 
 
 if __name__ == "__main__":
