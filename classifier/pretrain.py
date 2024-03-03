@@ -89,7 +89,7 @@ def main():
     preprocess_logits_for_metrics=preprocess_logits_for_metrics
   )
 
-  # trainer.train()
+  trainer.train()
 
 
 if __name__ == "__main__":
