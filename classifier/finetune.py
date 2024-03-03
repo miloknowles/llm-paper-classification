@@ -5,8 +5,8 @@ import torch
 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from transformers import TrainingArguments, Trainer
+from datasets import load_dataset
 
-from classifier.arxiv_dataset import load_dataset_splits
 from classifier.paths import data_folder, models_folder
 
 import numpy as np
@@ -42,19 +42,39 @@ def get_max_steps(train_path: str, num_train_epochs: int, batch_size: int) -> in
   return (n_examples + 1) * num_train_epochs // batch_size
 
 
+class TrainerWithCustomLoss(Trainer):
+  """Subclasses `Trainer` to use a custom loss function.`"""
+  def __init__(
+    self,
+    compute_loss_fn: callable,
+    *args,
+    **kwargs
+  ):
+    super().__init__(*args, **kwargs)
+    self.compute_loss_fn = compute_loss_fn
+
+  def compute_loss(self, model, inputs, return_outputs=False):
+    """Compute using the custom loss function."""
+    labels = inputs.pop("labels")
+    outputs = model(**inputs)
+    logits = outputs.logits
+    loss = self.compute_loss_fn(logits, labels)
+    return (loss, outputs) if return_outputs else loss
+
+
 def main():
   num_labels = 2
   num_train_epochs = 50
-  # batch_size = 16
   batch_size = 16
 
-  # model_name = "distilbert/distilbert-base-uncased"
-  model_name = "bert-base-uncased"
+  model_name = "distilbert/distilbert-base-uncased"
+  # model_name = "bert-base-uncased"
 
   run_name = "debugging"
 
   id2label = {0: "False", 1: "True"}
   label2id = {"False": 0, "True": 1}
+  label_loss_weights = torch.Tensor([1.0, 10.0]).to("mps")
 
   model = AutoModelForSequenceClassification.from_pretrained(
     model_name,
@@ -65,11 +85,11 @@ def main():
   # https://stackoverflow.com/questions/69842980/asking-to-truncate-to-max-length-but-no-maximum-length-is-provided-and-the-model
   tokenizer = AutoTokenizer.from_pretrained(model_name, model_max_length=512)
 
-  dataset = load_dataset_splits(
-    data_folder / "finetuning" / "train.jsonl",
-    data_folder / "finetuning" / "val.jsonl",
-    data_folder / "finetuning" / "test.jsonl",
-  )
+  # This dataset has columns: `text` and `label`.
+  dataset = load_dataset("json", data_files={
+    "train": str(data_folder / "finetuning" / "train.jsonl"),
+    "val": str(data_folder / "finetuning" / "val.jsonl"),
+  }).select_columns(["text", "label"])
 
   def convert_labels(examples: dict[str, list[int | str]]):
     """Convert the `label` field to a numeric value (it's "True" or "False" in the raw data)."""
@@ -89,19 +109,28 @@ def main():
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     save_strategy="epoch",
-    learning_rate=1e-4,
-    max_steps=get_max_steps(data_folder / "finetuning" / "train.jsonl", num_train_epochs, batch_size),
+    # learning_rate=1e-4,
+    # max_steps=get_max_steps(data_folder / "finetuning" / "train.jsonl", num_train_epochs, batch_size),
   )
 
-  trainer = Trainer(
+  trainer = TrainerWithCustomLoss(
+    compute_loss_fn=torch.nn.CrossEntropyLoss(weight=label_loss_weights, reduction="mean"),
     model=model,
     args=training_args,
     train_dataset=dataset["train"],
     eval_dataset=dataset["val"],
     compute_metrics=compute_metrics,
-    # data_collator=data_collator,
     tokenizer=tokenizer,
   )
+
+  # trainer = Trainer(
+  #   model=model,
+  #   args=training_args,
+  #   train_dataset=dataset["train"],
+  #   eval_dataset=dataset["val"],
+  #   compute_metrics=compute_metrics,
+  #   tokenizer=tokenizer,
+  # )
 
   trainer.train()
 
