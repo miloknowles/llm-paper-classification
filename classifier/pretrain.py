@@ -1,5 +1,7 @@
 import sys; sys.path.append("..")
 
+import torch
+
 from transformers import (
   AutoConfig,
   AutoModelForMaskedLM,
@@ -13,6 +15,32 @@ from datasets import load_from_disk
 from classifier.paths import data_folder, models_folder
 
 import evaluate
+
+
+metrics = dict(
+  accuracy=evaluate.load("accuracy"),
+  ppl=evaluate.load("perplexity"),
+)
+
+
+def compute_metrics(eval_preds: tuple[torch.Tensor, torch.Tensor]):
+  """Takes a tuple of logits and labels and returns a dictionary of metrics.
+
+  Note that this function is called *after* the logits have been preprocessed (argmax).
+  """
+  preds, labels = eval_preds
+  labels = labels.reshape(-1)
+  preds = preds.reshape(-1)
+  mask = labels != -100
+  labels = labels[mask]
+  preds = preds[mask]
+  return {name: metric.compute(predictions=preds, references=labels) for name, metric in metrics.items()}
+
+
+def preprocess_logits_for_metrics(logits, labels):
+  if isinstance(logits, tuple):
+    logits = logits[0]
+  return logits.argmax(dim=-1)
 
 
 def main():
@@ -41,26 +69,6 @@ def main():
 
   model_size = sum(t.numel() for t in model.parameters())
   print(f"Model size: {model_size/1000**2:.1f}M parameters")
-
-  def preprocess_logits_for_metrics(logits, labels):
-    if isinstance(logits, tuple):
-      logits = logits[0]
-    return logits.argmax(dim=-1)
-
-  metric = evaluate.load("accuracy")
-
-  def compute_metrics(eval_preds):
-    """Takes a tuple of logits and labels and returns a dictionary of metrics.
-
-    Note that this function is called *after* the logits have been preprocessed (argmax).
-    """
-    preds, labels = eval_preds
-    labels = labels.reshape(-1)
-    preds = preds.reshape(-1)
-    mask = labels != -100
-    labels = labels[mask]
-    preds = preds[mask]
-    return metric.compute(predictions=preds, references=labels)
 
   data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
