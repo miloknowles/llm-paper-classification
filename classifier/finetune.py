@@ -44,7 +44,10 @@ def get_max_steps(train_path: str, num_train_epochs: int, batch_size: int) -> in
 
 
 class TrainerWithCustomLoss(Trainer):
-  """Subclasses `Trainer` to use a custom loss function.`"""
+  """Subclasses `Trainer` to use a custom loss function.
+  
+  This allows us to use a weighted cross entropy loss to deal with class imbalance.
+  """
   def __init__(
     self,
     compute_loss_fn: callable,
@@ -66,7 +69,7 @@ class TrainerWithCustomLoss(Trainer):
 def main():
   num_labels = 2
   num_train_epochs = 50
-  batch_size = 8
+  batch_size = 16
 
   model_name = "distilbert/distilbert-base-uncased"
   # model_name = "bert-base-uncased"
@@ -88,7 +91,7 @@ def main():
 
   # This dataset has columns: `text` and `label`.
   dataset = load_dataset("json", data_files={
-    "train": str(data_folder / "finetuning" / "train.jsonl"),
+    "train": str(data_folder / "finetuning" / "augmented_train.jsonl"),
     "val": str(data_folder / "finetuning" / "val.jsonl"),
   }).select_columns(["text", "label"])
 
@@ -114,17 +117,8 @@ def main():
     # max_steps=get_max_steps(data_folder / "finetuning" / "train.jsonl", num_train_epochs, batch_size),
   )
 
-  trainer = TrainerWithCustomLoss(
-    compute_loss_fn=torch.nn.CrossEntropyLoss(weight=label_loss_weights, reduction="mean"),
-    model=model,
-    args=training_args,
-    train_dataset=dataset["train"],
-    eval_dataset=dataset["val"],
-    compute_metrics=compute_metrics,
-    tokenizer=tokenizer,
-  )
-
-  # trainer = Trainer(
+  # trainer = TrainerWithCustomLoss(
+  #   compute_loss_fn=torch.nn.CrossEntropyLoss(weight=label_loss_weights, reduction="mean"),
   #   model=model,
   #   args=training_args,
   #   train_dataset=dataset["train"],
@@ -132,6 +126,15 @@ def main():
   #   compute_metrics=compute_metrics,
   #   tokenizer=tokenizer,
   # )
+
+  trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=dataset["train"],
+    eval_dataset=dataset["val"],
+    compute_metrics=compute_metrics,
+    tokenizer=tokenizer,
+  )
 
   trainer.train()
 
