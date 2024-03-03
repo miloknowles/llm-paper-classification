@@ -19,7 +19,7 @@ import evaluate
 
 metrics = dict(
   accuracy=evaluate.load("accuracy"),
-  ppl=evaluate.load("perplexity"),
+  # ppl=evaluate.load("perplexity"),
 )
 
 
@@ -43,7 +43,7 @@ def preprocess_logits_for_metrics(logits, labels):
   return logits.argmax(dim=-1)
 
 
-def main():
+def main(fast_mode: bool = False):
   """Pretrain a masked language model on the arXiv dataset."""
   set_seed(42)
 
@@ -52,12 +52,19 @@ def main():
   mlm_probability = 0.15 # same as the default used by BERT
   context_length = 512
   num_train_epochs = 50
+
+  # NOTE(milo): I'm able to use a batch size of 32 on an L4 GPU, but only 16 locally.
   batch_size = 16
   tokenizer_path = models_folder / "tokenizers" / "distilbert-base-uncased-arxiv"
 
   tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, model_max_length=context_length)
 
   dataset = load_from_disk(str(data_folder / "pretraining" / "tokenized"))
+
+  if fast_mode:
+    dataset["train"] = dataset["train"].select(range(10))
+    dataset["val"] = dataset["val"].select(range(10))
+
   print("Loaded dataset:")
   print(dataset)
 
@@ -94,7 +101,7 @@ def main():
     tokenizer=tokenizer,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
-    preprocess_logits_for_metrics=preprocess_logits_for_metrics
+    preprocess_logits_for_metrics=preprocess_logits_for_metrics,
   )
 
   trainer.train()
