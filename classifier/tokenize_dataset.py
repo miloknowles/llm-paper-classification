@@ -59,6 +59,8 @@ def save_pretraining_tokenized_dataset():
 
   def tokenize(element):
     """Tokenize the `text` field of this example into chunks of `context_length` tokens.
+
+    See: https://huggingface.co/docs/transformers/main_classes/tokenizer
     
     Notes
     -----

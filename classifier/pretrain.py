@@ -14,12 +14,11 @@ from transformers import TrainingArguments, Trainer
 from datasets import load_from_disk
 import evaluate
 
-from classifier.paths import data_folder, models_folder
+from classifier.paths import models_folder
 
 
 metrics = dict(
   accuracy=evaluate.load("accuracy"),
-  # ppl=evaluate.load("perplexity"),
 )
 
 
