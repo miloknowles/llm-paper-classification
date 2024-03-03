@@ -11,7 +11,7 @@ from transformers import AutoTokenizer
 def main():
   """Train a tokenizer on the pretraining dataset."""
   parser = argparse.ArgumentParser()
-  parser.add_argument("--model_id", type=str, default="distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
+  parser.add_argument("--model_id", type=str, default="distilbert/distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
   parser.add_argument("--tokenizer_id", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use. This should exist in the `models/tokenizers` folder.")
   parser.add_argument("--vocab_size", type=int, default=32_000, help="The size of the vocabulary to build.")
   args = parser.parse_args()
