@@ -49,7 +49,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("--run_name", type=str, default="pretrain_debug", help="The name of the run.")
   parser.add_argument("--model_name", type=str, default="distilbert/distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
-  parser.add_argument("--tokenizer_name", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use. This should exist in the `models/tokenizers` folder.")
+  parser.add_argument("--tokenizer_path", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use (if remote), otherwise a path to a local saved tokenizer.")
   parser.add_argument("--epochs", type=int, default=50, help="The number of epochs to train for.")
   parser.add_argument("--batch_size", type=int, default=32, help="The batch size to use.")
   parser.add_argument("--mlm_probability", type=float, default=0.15, help="The probability of masking tokens.")
@@ -60,8 +60,7 @@ def main():
 
   set_seed(42)
 
-  tokenizer_path = models_folder / "tokenizers" / args.tokenizer_name
-  tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, model_max_length=args.context_length)
+  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path, model_max_length=args.context_length)
 
   dataset = load_from_disk(str(data_folder / "pretraining" / "tokenized"))
 

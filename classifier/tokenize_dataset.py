@@ -79,6 +79,7 @@ def save_pretraining_tokenized_dataset():
     remove_columns=raw_datasets["train"].column_names,
     num_proc=args.num_proc
   )
+  print("TOKENIZED")
 
   print(tokenized_datasets)
   tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized" / args.dataset_name)
