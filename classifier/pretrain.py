@@ -62,8 +62,7 @@ def main():
   set_seed(42)
 
   tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path, model_max_length=args.context_length)
-
-  dataset = load_from_disk(str(data_folder / "pretraining" / "tokenized"))
+  dataset = load_from_disk(args.data_folder)
 
   if args.fast:
     dataset["train"] = dataset["train"].select(range(10))
