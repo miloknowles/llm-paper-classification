@@ -42,10 +42,14 @@ def save_pretraining_tokenized_dataset():
   Arrow format. You can read the data using `datasets.load_from_disk`.
   """
   parser = argparse.ArgumentParser()
+  parser.add_argument("--dataset_name", type=str, default="arxiv", help="The name of the dataset to use.")
   parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context window. The dataset is chunked into this size.")
-  parser.add_argument("--tokenizer_path", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv", help="The path to the tokenizer to use.")
+  parser.add_argument("--tokenizer_path", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv-32k", help="The path to the tokenizer to use.")
   parser.add_argument("--num_proc", type=int, default=4, help="The number of processes to use.")
   args = parser.parse_args()
+
+  if args.dataset_name is None:
+    raise ValueError("Must include a `dataset_name`!")
 
   tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path, model_max_length=args.context_length)
   print("Context window size:", tokenizer.model_max_length)
@@ -77,7 +81,7 @@ def save_pretraining_tokenized_dataset():
   )
 
   print(tokenized_datasets)
-  tokenized_datasets.save_to_disk(data_folder / "pretraining" / f"tokenized")
+  tokenized_datasets.save_to_disk(data_folder / "pretraining" / "tokenized" / args.dataset_name)
   print("DONE")
 
 
