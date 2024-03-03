@@ -51,7 +51,7 @@ def main():
   model_name = "distilbert-base-uncased"
   mlm_probability = 0.15 # same as the default used by BERT
   context_length = 512
-  num_train_epochs = 1
+  num_train_epochs = 50
   batch_size = 16
   tokenizer_path = models_folder / "tokenizers" / "distilbert-base-uncased-arxiv"
 
