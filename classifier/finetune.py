@@ -8,6 +8,7 @@ from transformers import TrainingArguments, Trainer
 from datasets import load_dataset
 
 from classifier.paths import data_folder, models_folder
+from classifier.train_utils import get_best_system_device
 
 import numpy as np
 import evaluate
@@ -69,12 +70,12 @@ def main():
 
   model_name = "distilbert/distilbert-base-uncased"
   # model_name = "bert-base-uncased"
-
   run_name = "debugging"
+  device = get_best_system_device()
 
   id2label = {0: "False", 1: "True"}
   label2id = {"False": 0, "True": 1}
-  label_loss_weights = torch.Tensor([1.0, 10.0]).to("mps")
+  label_loss_weights = torch.Tensor([1.0, 10.0]).to(device)
 
   model = AutoModelForSequenceClassification.from_pretrained(
     model_name,
