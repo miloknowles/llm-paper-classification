@@ -9,6 +9,7 @@ from transformers import TrainingArguments, Trainer
 from datasets import load_dataset
 
 from classifier.paths import data_folder, models_folder, output_folder
+from classifier.custom_loss_trainer import CustomLossTrainer
 
 import evaluate
 
@@ -55,10 +56,10 @@ def main():
                       help="The name of the model to use (if downloading from Hugging Face). Otherwise, a path to a locally trained model.")
   parser.add_argument("--tokenizer", type=str, default="prajjwal1/bert-tiny",
                       help="The name of a tokenizer to use (if downloading from Hugging Face). Otherwise, a path to a locally trained tokenizer.")
-  parser.add_argument("--epochs", type=int, default=50, help="The number of epochs to train for.")
+  parser.add_argument("--epochs", type=int, default=100, help="The number of epochs to train for.")
   parser.add_argument("--batch_size", type=int, default=16, help="The batch size to use.")
   parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context.")
-  parser.add_argument("--lr", type=float, default=2e-5, help="The learning rate to use.")
+  parser.add_argument("--lr", type=float, default=5e-6, help="The learning rate to use.")
   parser.add_argument("--fast", action="store_true", help="Run the script in fast mode.")
   parser.add_argument("--validate", action="store_true", help="Run the script in validation mode.")
   parser.add_argument("--test", action="store_true", help="Run the script in test mode.")

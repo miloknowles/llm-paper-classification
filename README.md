@@ -1,6 +1,6 @@
 # Training an arXiv Paper Classifier using BERT-Tiny
 
-Pre-training and finetuning language models to classify their relevance to a topic.
+Pre-training and finetuning language models to classify their relevance to a topic, built using the [HuggingFace library](https://huggingface.co/docs/transformers/en/index).
 
 ## Dataset
 
