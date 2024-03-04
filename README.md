@@ -32,3 +32,25 @@ Run `python tokenize_dataset.py` to do this step.
 ### Pre-Train DistilBERT
 
 Run `python pretrain.py` to train the model from scratch. Weights will be saved at each epoch, and evalution metrics will be printed.
+
+## Finetuning Pipeline
+
+### Finetune from a Pre-Trained Model
+
+### Evaluate
+
+Run the `finetune.py` script in `--validate` mode:
+```python
+python finetune.py --validate --model ../models/bert-tiny-test/checkpoint-944/ --tokenizer_name ../models/bert-tiny-test/checkpoint-944
+```
+
+This will quickly run the model on the validation set and print out evaluation metrics.
+
+### Test Set Inference
+
+Finally, generate predictions on the held out test set.
+
+Run the `finetune.py` script in `--test` mode:
+```python
+python finetune.py --test --model ../models/bert-tiny-test/checkpoint-944/ --tokenizer_name ../models/bert-tiny-test/checkpoint-944
+```
