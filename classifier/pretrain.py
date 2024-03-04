@@ -52,7 +52,7 @@ def main():
                       help="The name of the run.")
   parser.add_argument("--model_name", type=str, default="distilbert/distilbert-base-uncased",
                       help="The name of the model to use. This should be a Hugging Face model name.")
-  parser.add_argument("--tokenizer_path", type=str, default="distilbert-base-uncased-arxiv",
+  parser.add_argument("--tokenizer", type=str, default="distilbert-base-uncased-arxiv",
                       help="The name of the tokenizer to use (if remote), otherwise a path to a locally saved tokenizer.")
   parser.add_argument("--epochs", type=int, default=10,
                       help="The number of epochs to train for.")
@@ -67,7 +67,7 @@ def main():
 
   set_seed(42)
 
-  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path, model_max_length=args.context_length)
+  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer, model_max_length=args.context_length)
   dataset = load_from_disk(args.data_folder)
 
   if args.fast:

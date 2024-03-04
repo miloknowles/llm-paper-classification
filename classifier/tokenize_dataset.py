@@ -47,7 +47,7 @@ def tokenize_dataset():
                       help="The name of the dataset to use.")
   parser.add_argument("--context_length", type=int, default=512,
                       help="The maximum length of the context window. The dataset is chunked into this size.")
-  parser.add_argument("--tokenizer_path", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv-32k",
+  parser.add_argument("--tokenizer", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv-32k",
                       help="The path to the tokenizer to use.")
   parser.add_argument("--num_proc", type=int, default=4,
                       help="The number of processes to use.")
@@ -56,7 +56,7 @@ def tokenize_dataset():
   if args.dataset_name is None:
     raise ValueError("Must include a `dataset_name`!")
 
-  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_path, model_max_length=args.context_length)
+  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer, model_max_length=args.context_length)
   print("Context window size:", tokenizer.model_max_length)
 
   raw_datasets = load_pretraining_text_dataset(num_proc=args.num_proc)

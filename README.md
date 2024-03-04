@@ -2,6 +2,13 @@
 
 Pre-training and finetuning language models to classify their relevance to a topic, built using the [HuggingFace library](https://huggingface.co/docs/transformers/en/index).
 
+## Getting Started
+
+To install dependencies, run:
+```
+pipenv install --dev
+```
+
 ## Dataset
 
 Download the arXiv dataset from [here](https://www.kaggle.com/datasets/Cornell-University/arxiv), the `mv` it to the `data` folder and `unzip archive.zip`.
