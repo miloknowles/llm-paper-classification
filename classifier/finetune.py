@@ -51,9 +51,9 @@ def save_predictions(dataset, trainer, id2label):
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("--run_name", type=str, default="finetune_debug", help="The name of the run.")
-  parser.add_argument("--model", type=str, default="distilbert-base-uncased",
+  parser.add_argument("--model", type=str, default="prajjwal1/bert-tiny",
                       help="The name of the model to use (if downloading from Hugging Face). Otherwise, a path to a locally trained model.")
-  parser.add_argument("--tokenizer", type=str, default="distilbert-base-uncased-arxiv-32k",
+  parser.add_argument("--tokenizer", type=str, default="prajjwal1/bert-tiny",
                       help="The name of a tokenizer to use (if downloading from Hugging Face). Otherwise, a path to a locally trained tokenizer.")
   parser.add_argument("--epochs", type=int, default=50, help="The number of epochs to train for.")
   parser.add_argument("--batch_size", type=int, default=16, help="The batch size to use.")
@@ -100,7 +100,7 @@ def main():
       "val": str(data_folder / "finetuning" / "val.jsonl"),
     }
 
-  dataset = load_dataset("json", data_files=data_files) # .select_columns(["text", "label"] if not args.test else ["text"])
+  dataset = load_dataset("json", data_files=data_files)
 
   # At test time, there are no labels to convert, so this would throw an error.
   if not args.test:
