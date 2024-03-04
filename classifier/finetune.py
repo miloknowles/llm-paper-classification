@@ -9,7 +9,6 @@ from transformers import TrainingArguments, Trainer
 from datasets import load_dataset
 
 from classifier.paths import data_folder, models_folder, output_folder
-from classifier.custom_loss_trainer import CustomLossTrainer
 
 import evaluate
 
