@@ -46,13 +46,13 @@ def main():
   label2id = {"False": 0, "True": 1}
 
   model = AutoModelForSequenceClassification.from_pretrained(
-    args.model_name,
+    args.model_name_or_path,
     num_labels=num_labels,
     id2label=id2label,
     label2id=label2id,
   )
   # https://stackoverflow.com/questions/69842980/asking-to-truncate-to-max-length-but-no-maximum-length-is-provided-and-the-model
-  tokenizer = AutoTokenizer.from_pretrained(args.model_name, model_max_length=args.context_length)
+  tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name, model_max_length=args.context_length)
   print("Context window size:", tokenizer.model_max_length)
 
   # This dataset has columns: `text` and `label`.

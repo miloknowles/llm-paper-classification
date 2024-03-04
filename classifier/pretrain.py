@@ -37,6 +37,7 @@ def compute_metrics(eval_preds: tuple[torch.Tensor, torch.Tensor]):
 
 
 def preprocess_logits_for_metrics(logits, labels):
+  """Preprocess the logits before computing metrics."""
   if isinstance(logits, tuple):
     logits = logits[0]
   return logits.argmax(dim=-1)
@@ -45,14 +46,21 @@ def preprocess_logits_for_metrics(logits, labels):
 def main():
   """Pretrain a masked language model on the arXiv dataset."""
   parser = argparse.ArgumentParser()
-  parser.add_argument("--data_folder", type=str, help="The folder where the pretraining data is stored.")
-  parser.add_argument("--run_name", type=str, default="pretrain_debug", help="The name of the run.")
-  parser.add_argument("--model_name", type=str, default="distilbert/distilbert-base-uncased", help="The name of the model to use. This should be a Hugging Face model name.")
-  parser.add_argument("--tokenizer_path", type=str, default="distilbert-base-uncased-arxiv", help="The name of the tokenizer to use (if remote), otherwise a path to a local saved tokenizer.")
-  parser.add_argument("--epochs", type=int, default=10, help="The number of epochs to train for.")
+  parser.add_argument("--data_folder", type=str,
+                      help="The folder where the pretraining data is stored.")
+  parser.add_argument("--run_name", type=str, default="pretrain_debug",
+                      help="The name of the run.")
+  parser.add_argument("--model_name", type=str, default="distilbert/distilbert-base-uncased",
+                      help="The name of the model to use. This should be a Hugging Face model name.")
+  parser.add_argument("--tokenizer_path", type=str, default="distilbert-base-uncased-arxiv",
+                      help="The name of the tokenizer to use (if remote), otherwise a path to a locally saved tokenizer.")
+  parser.add_argument("--epochs", type=int, default=10,
+                      help="The number of epochs to train for.")
   parser.add_argument("--batch_size", type=int, default=32, help="The batch size to use.")
-  parser.add_argument("--mlm_probability", type=float, default=0.15, help="The probability of masking tokens.")
-  parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context.")
+  parser.add_argument("--mlm_probability", type=float, default=0.15,
+                      help="The probability of masking tokens.")
+  parser.add_argument("--context_length", type=int, default=512,
+                      help="The maximum length of the context.")
   parser.add_argument("--lr", type=float, default=2e-5, help="The learning rate to use.")
   parser.add_argument("--fast", action="store_true", help="Run the script in fast mode.")
   args = parser.parse_args()

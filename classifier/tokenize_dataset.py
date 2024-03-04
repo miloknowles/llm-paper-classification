@@ -26,15 +26,16 @@ def load_pretraining_text_dataset(num_proc: int = 4) -> DatasetDict:
   return raw
 
 
-def save_pretraining_tokenized_dataset():
+def tokenize_dataset():
   """Tokenizes the pretraining dataset and saves it to disk.
   
   This allows us to skip this time-consuming step at training time.
 
   Notes
   -----
-  Tokenized text is chunked into batches of `context_length` tokens. This means
-  that some examples will be split into multiple batches.
+  Tokenized text is chunked into batches of `context_length` tokens. Examples
+  that are larger than the `context_length` are truncated, and examples that are
+  smaller are padded.
 
   Output
   ------
@@ -42,10 +43,14 @@ def save_pretraining_tokenized_dataset():
   Arrow format. You can read the data using `datasets.load_from_disk`.
   """
   parser = argparse.ArgumentParser()
-  parser.add_argument("--dataset_name", type=str, default="arxiv", help="The name of the dataset to use.")
-  parser.add_argument("--context_length", type=int, default=512, help="The maximum length of the context window. The dataset is chunked into this size.")
-  parser.add_argument("--tokenizer_path", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv-32k", help="The path to the tokenizer to use.")
-  parser.add_argument("--num_proc", type=int, default=4, help="The number of processes to use.")
+  parser.add_argument("--dataset_name", type=str, default="arxiv",
+                      help="The name of the dataset to use.")
+  parser.add_argument("--context_length", type=int, default=512,
+                      help="The maximum length of the context window. The dataset is chunked into this size.")
+  parser.add_argument("--tokenizer_path", type=str, default="../models/tokenizers/distilbert-base-uncased-arxiv-32k",
+                      help="The path to the tokenizer to use.")
+  parser.add_argument("--num_proc", type=int, default=4,
+                      help="The number of processes to use.")
   args = parser.parse_args()
 
   if args.dataset_name is None:
@@ -57,14 +62,14 @@ def save_pretraining_tokenized_dataset():
   raw_datasets = load_pretraining_text_dataset(num_proc=args.num_proc)
   print("LOADED")
 
-  def tokenize(element):
+  def tokenize(element: dict):
     """Tokenize the `text` field of this example into chunks of `context_length` tokens.
 
     See: https://huggingface.co/docs/transformers/main_classes/tokenizer
     
     Notes
     -----
-    It's very important that we both truncate and pad the input below. There are
+    It's very important that we both truncate AND pad the input below. There are
     many arXiv papers that are shorter than the `context_length`, and we want to
     include them. There are also some papers that are longer, and we want to
     truncate those and include their pieces as well.
@@ -74,15 +79,16 @@ def save_pretraining_tokenized_dataset():
     """
     outputs = tokenizer(
       element["text"],
-      truncation=True,
-      padding="max_length",
+      truncation=True, # truncate to `context_length`
+      padding="max_length", # pad to `context_length`
       max_length=args.context_length,
-      return_overflowing_tokens=True,
-      return_length=True,
+      return_overflowing_tokens=True, # return the chunks that don't fit
+      return_length=True, # return the length of each chunk
     )
 
-    # Chunks that don't reach the `context_length` are discarded. Very important
-    # to include padding above so that this code doesn't throw away shorter examples!
+    # Chunks that don't reach the `context_length` are discarded. This will
+    # happen for the last chunk of a paper that is not a multiple of the context
+    # length.
     input_batch = []
     for length, input_ids in zip(outputs["length"], outputs["input_ids"]):
       if length == args.context_length:
@@ -104,4 +110,4 @@ def save_pretraining_tokenized_dataset():
 
 
 if __name__ == "__main__":
-  save_pretraining_tokenized_dataset()
+  tokenize_dataset()

@@ -2,6 +2,7 @@ import pathlib
 
 
 def top_folder():
+  """Get the top-level folder of the repository."""
   current_path = pathlib.Path(__file__).resolve()
   repository_path = current_path.parents[1]
   return repository_path
